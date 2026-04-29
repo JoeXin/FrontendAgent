@@ -23,8 +23,18 @@ async function main() {
     console.log("🧹 清空现有知识库...");
     await VectorService.resetCollection();
 
-    console.log("📚 正在初始化前端框架知识库...");
-    await VectorService.addDocuments(myDocs);
+    const BATCH_SIZE = 20;
+
+    for (let i = 0; i < myDocs.length; i += BATCH_SIZE) {
+      const batch = myDocs.slice(i, i + BATCH_SIZE);
+
+      console.log(`📦 batch ${i / BATCH_SIZE + 1}`);
+
+      await VectorService.addDocuments(batch);
+
+      console.log(`📊 进度 ${Math.min(i + BATCH_SIZE, myDocs.length)}/${myDocs.length}`);
+    }
+
 
     console.log("✅ 前端框架知识库初始化完成！");
     //  console.log(`   已写入 ${myDocs.length} 条文档到集合 "${VectorService.COLLECTION_NAME}"`);
