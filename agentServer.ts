@@ -29,7 +29,8 @@ app.post('/api/chat/stream', async (req, res) => {
   res.setHeader('Connection', 'keep-alive');
 
   try {
-    const context = await VectorService.query("my_collection", question);
+    // const context = await VectorService.query("my_collection", question);
+    const context = await VectorService.query(question, 3)
     const validContext = (context || []).filter(doc =>
       doc && typeof doc === 'string' && doc.trim().length > 0
     );

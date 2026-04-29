@@ -107,9 +107,10 @@ export class VectorService {
       }
 
       const collection = await this.getCollection();
+      const enhancedQuery = `${queryText} 前端 JavaScript Vue React 解释 原理 示例`;
 
       const results = await collection.query({
-        queryTexts: [queryText],
+        queryTexts: [enhancedQuery],
         nResults: nResults, // 👈 现在一定是 number
       });
 

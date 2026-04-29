@@ -3,6 +3,19 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { globSync } from 'glob'; // 可选：用于通配符匹配
 
+function splitText(text: string, chunkSize = 500, overlap = 100) {
+  const chunks: string[] = [];
+
+  for (let i = 0; i < text.length; i += chunkSize - overlap) {
+    const chunk = text.slice(i, i + chunkSize).trim();
+    if (chunk.length > 50) { // 过滤太短的
+      chunks.push(chunk);
+    }
+  }
+
+  return chunks;
+}
+
 /**
  * 从指定目录加载 .md, .tsx, .json 文件并提取文本内容
  * @param dirPath 文档目录路径，如 './docs'
@@ -56,7 +69,9 @@ export async function loadDocumentsFromFiles(dirPath: string): Promise<string[]>
 
     // 【可选】分块处理（避免单个文档过大）
     // 这里先整篇加入，你可在 VectorService 内部或此处做 chunking
-    docs.push(text);
+    const chunks = splitText(text);
+
+    docs.push(...chunks);
   }
 
   return docs;
