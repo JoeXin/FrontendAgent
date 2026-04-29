@@ -1,0 +1,40 @@
+# HTML (HyperText Markup Language)
+- 作用：定义网页结构和内容。
+- 核心标签：
+  - 结构：<html>, <head>, <body>, <header>, <main>, <footer>
+  - 文本：<h1>-<h6>, <p>, <span>, <div>
+  - 链接与媒体：<a href="">, <img src="" alt="">, <video>, <audio>
+  - 表单：<form>, <input>, <button>, <select>, <textarea>
+- 语义化：使用语义标签（如 <article>, <section>）提升可访问性和 SEO。
+- DOCTYPE：<!DOCTYPE html> 声明 HTML5 文档类型。
+
+# CSS (Cascading Style Sheets)
+- 作用：控制网页样式和布局。
+- 选择器：
+  - 基础：元素（div）、类（.class）、ID（#id）
+  - 组合：后代（div p）、子（div > p）、相邻兄弟（h1 + p）
+  - 伪类：:hover, :focus, :nth-child()
+- 盒模型：content + padding + border + margin。
+- 布局方式：
+  - Flexbox：一维布局，主轴/交叉轴对齐（display: flex）。
+  - Grid：二维布局，行列控制（display: grid）。
+  - 定位：static, relative, absolute, fixed, sticky。
+- 响应式：@media 查询、viewport meta 标签、rem/vw 单位。
+- 变量：使用 :root { --color: red; } 定义 CSS 自定义属性。
+
+# JavaScript (JS)
+- 作用：实现网页交互和动态逻辑。
+- 核心概念：
+  - 变量声明：const（常量）, let（块级作用域）, var（函数作用域，不推荐）
+  - 数据类型：string, number, boolean, object, array, null, undefined
+  - 函数：function declaration, arrow function (() => {})
+  - 异步：Promise, async/await, fetch API
+- DOM 操作：
+  - 选择元素：document.querySelector('.btn'), document.getElementById('app')
+  - 修改内容：element.textContent = 'Hello', element.innerHTML = '<strong>Hi</strong>'
+  - 事件监听：element.addEventListener('click', handler)
+- ES6+ 特性：
+  - 解构赋值：const { name } = user;
+  - 模板字符串：`Hello ${name}`
+  - 模块化：import/export
+- 严格模式：'use strict' 提升代码安全性。

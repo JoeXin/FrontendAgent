@@ -1,0 +1,26 @@
+# === 忽略敏感配置 ===
+.env
+.env.local
+
+# === 忽略本地数据库与缓存 ===
+chroma_data/
+chroma.log
+
+chroma/
+
+# === 忽略依赖 ===
+node_modules/
+.pnpm/
+
+# === 忽略日志与临时文件 ===
+*.log
+*.tmp
+*.swp
+*~
+
+# === 可选：忽略锁文件（仅当为私有实验项目时）===
+# pnpm-lock.yaml
+
+# === 忽略 IDE/编辑器文件 ===
+.vscode/
+.idea/

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code Chat</title>
+
+  <!-- 引入 Highlight.js 样式和脚本 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fafafa;
+    }
+
+    #answer {
+      white-space: pre-wrap;
+      padding: 20px;
+      min-height: 120px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: white;
+      line-height: 1.6;
+      overflow-wrap: break-word;
+    }
+
+    #answer pre {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 16px;
+      margin: 16px 0;
+      overflow-x: auto;
+    }
+
+    #answer code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 13px;
+    }
+
+    .input-area {
+      padding: 10px 0;
+      position: relative;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    #question {
+      width: 320px;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-left: 8px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+    .chat-body{
+      height: 100%;
+      overflow: hidden;
+    }
+    
+  </style>
+</head>
+
+<body>
+  <div class="chat-body">
+    <div id="answer">等待提问...</div>
+    <div class="input-area">
+      <input id="question" placeholder="请输入你的问题" autofocus>
+      <button onclick="sendMessage()">发送提问</button>
+    </div>
+  </div>
+
+  <script>
+    let abortController = null;
+    let currentConversationId = null;
+    let fullContent = '';
+
+    async function sendMessage() {
+      const questionInput = document.getElementById('question');
+      const answerBox = document.getElementById('answer');
+      const question = questionInput.value.trim();
+
+      if (!question) {
+        alert("请输入问题");
+        return;
+      }
+
+      fullContent = '';
+      answerBox.innerHTML = '<em>思考中...</em>';
+      if (abortController) abortController.abort();
+      abortController = new AbortController();
+
+      try {
+        // const response = await fetch('http://localhost:3000/api/agent/chat', {
+                const response = await fetch('http://localhost:3000/api/chat/stream', {
+
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: question,
+            // conversationId: currentConversationId
+          }),
+          signal: abortController.signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+
+       while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+
+  buffer += decoder.decode(value, { stream: true });
+  const lines = buffer.split('\n\n');
+  buffer = lines.pop() || '';
+
+  for (const line of lines) {
+    if (!line.trim() || line === 'data: [DONE]') continue;
+
+    // 直接处理 data: {...} 格式
+    if (line.startsWith('data:')) {
+      try {
+        const jsonStr = line.substring(5).trim(); // 去掉 "data:"
+        const payload = JSON.parse(jsonStr);
+
+        if (payload.content !== undefined) {
+          fullContent += payload.content;
+          renderMarkdownWithCodeHighlight(fullContent);
+        }
+
+        if (payload.error) {
+          answerBox.innerHTML = `<span style="color:red;">错误：${payload.error}</span>`;
+          return;
+        }
+      } catch (e) {
+        console.warn('解析 data 行失败:', line, e);
+      }
+    }
+  }
+}
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          answerBox.innerHTML = `<span style="color:red;">请求异常：${error.message}</span>`;
+        }
+      }
+    }
+
+    // ========== 代码高亮渲染函数（不变） ==========
+    function renderMarkdownWithCodeHighlight(markdownText) {
+      const answerBox = document.getElementById('answer');
+      let escaped = markdownText
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+      const codeBlocks = [];
+      escaped = escaped.replace(/```(\w*)\n([\s\S]*?)\n```/g, (match, lang, code) => {
+        codeBlocks.push({ lang, code });
+        return `{{CODE_${codeBlocks.length - 1}}}`;
+      });
+
+      let result = escaped.replace(/\n/g, '<br>');
+
+      result = result.replace(/\{\{CODE_(\d+)\}\}/g, (match, index) => {
+        const { lang, code } = codeBlocks[index];
+        const langAttr = lang ? `class="language-${lang}"` : '';
+        return `<pre><code ${langAttr}>${code}</code></pre>`;
+      });
+
+      answerBox.innerHTML = result;
+      answerBox.querySelectorAll('pre code').forEach(el => {
+        hljs.highlightElement(el);
+      });
+    }
+
+    // 回车发送
+    document.getElementById('question').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+
+</html>
