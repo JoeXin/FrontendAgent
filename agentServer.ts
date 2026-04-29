@@ -19,7 +19,7 @@ const openai = new OpenAI({
 
 app.post('/api/chat/stream', async (req, res) => {
   const { question } = req.body;
-  
+
   if (!question) {
     return res.status(400).json({ error: '缺少 question 参数' });
   }
@@ -30,7 +30,7 @@ app.post('/api/chat/stream', async (req, res) => {
 
   try {
     const context = await VectorService.query("my_collection", question);
-     const validContext = (context || []).filter(doc => 
+    const validContext = (context || []).filter(doc =>
       doc && typeof doc === 'string' && doc.trim().length > 0
     );
 
@@ -46,7 +46,11 @@ app.post('/api/chat/stream', async (req, res) => {
       model: 'gpt-4-turbo',
       stream: true,
       messages: [
-        { role: 'system', content: `基于以下资料回答：${context.join('\n')}` },
+        {
+          role: 'system',
+          content: `你必须严格基于以下资料回答，如果没有答案就说不知道：\n${validContext.join('\n')}`
+
+        },
         { role: 'user', content: question }
       ],
     });

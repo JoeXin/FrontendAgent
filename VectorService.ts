@@ -93,12 +93,12 @@ export class VectorService {
     }
   }
 
-  static async query(queryText: string, limit: number | string = 3): Promise<string[]> {
+  static async query(queryText: string, limit?:number): Promise<string[]> {
     try {
       // 🔒 强制转换为数字，确保安全
       let nResults = typeof limit === 'string'
         ? parseInt(limit, 10)
-        : limit;
+        : limit || 3;
 
       // 🛡️ 边界校验
       if (isNaN(nResults) || nResults <= 0) {
